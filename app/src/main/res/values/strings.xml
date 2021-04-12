@@ -3,4 +3,6 @@
     <string name="setting_url">URL to crawl</string>
     <string name="setting_frequency">Crawl frequency (min)</string>
     <string name="setting_now">Crawl now</string>
+    <string name="setting_crawled">Last crawled on</string>
+    <string name="setting_modified">Last modified on</string>
 </resources>

@@ -23,4 +23,14 @@
         android:key="now"
         android:title="@string/setting_now" />
 
+    <Preference
+        android:key="crawled"
+        android:title="@string/setting_crawled"
+        android:defaultValue="0"/>
+
+    <Preference
+        android:key="modified"
+        android:title="@string/setting_modified"
+        android:defaultValue="0" />
+
 </PreferenceScreen>
