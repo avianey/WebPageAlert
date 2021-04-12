@@ -20,6 +20,10 @@ class WebPageAlertRequest(
         private const val HEADER_LAST_MODIFIED = "Last-Modified"
         private const val HEADER_LAST_MODIFIED_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz"
         private val sdf = SimpleDateFormat(HEADER_LAST_MODIFIED_DATE_FORMAT, Locale.US)
+
+        const val LAST_MODIFIED_UNAVAILABLE = 0L
+        const val LAST_MODIFIED_INVALID = -1L
+        const val LAST_MODIFIED_ERROR = -2L
     }
 
     override fun parseNetworkResponse(response: NetworkResponse?): Response<String> {
@@ -28,9 +32,9 @@ class WebPageAlertRequest(
             try {
                 sdf.parse(it).time
             } catch (ignore: Exception) {
-                0L
+                LAST_MODIFIED_INVALID
             }
-        } ?: 0L
+        } ?: LAST_MODIFIED_UNAVAILABLE
         lastModifiedCallback.invoke(lastModified)
         return super.parseNetworkResponse(response)
     }

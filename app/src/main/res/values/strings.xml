@@ -5,4 +5,8 @@
     <string name="setting_now">Crawl now</string>
     <string name="setting_crawled">Last crawled on</string>
     <string name="setting_modified">Last modified on</string>
+    <string name="setting_status">Crawl status</string>
+    <string name="status_unavailable">last modified not provided by website</string>
+    <string name="status_error">website crawl error</string>
+    <string name="status_invalid">last modified header is invalid</string>
 </resources>

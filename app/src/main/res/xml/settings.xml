@@ -33,4 +33,9 @@
         android:title="@string/setting_modified"
         android:defaultValue="0" />
 
+    <Preference
+        android:key="status"
+        android:title="@string/setting_status"
+        android:defaultValue="unknown" />
+
 </PreferenceScreen>

@@ -7,6 +7,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
+import androidx.work.WorkManager
+import fr.avianey.webpagealert.WebPageAlertRequest.Companion.LAST_MODIFIED_ERROR
+import fr.avianey.webpagealert.WebPageAlertRequest.Companion.LAST_MODIFIED_INVALID
+import fr.avianey.webpagealert.WebPageAlertRequest.Companion.LAST_MODIFIED_UNAVAILABLE
 import java.text.DateFormat
 import java.util.*
 
@@ -20,6 +24,7 @@ class WebPageAlertActivity : AppCompatActivity() {
         const val KEY_NOW = "now"
         const val KEY_LAST_MODIFIED = "modified"
         const val KEY_LAST_CRAWLED = "crawled"
+        const val KEY_CRAWL_STATUS = "status"
 
         const val CRAWL_FREQUENCY_MIN = 15
         const val CRAWL_FREQUENCY_MAX = 60 * 24 // 1 day
@@ -56,6 +61,14 @@ class WebPageAlertActivity : AppCompatActivity() {
                 onSharedPreferenceChanged(it, KEY_LAST_MODIFIED)
                 onSharedPreferenceChanged(it, KEY_LAST_CRAWLED)
             }
+            WorkManager.getInstance(requireContext())
+                // requestId is the WorkRequest id
+                .getWorkInfosForUniqueWorkLiveData(WebPageAlertWorker::class.java.name)
+                .observe(this, { t ->
+                        t?.first()?.let {
+                            findPreference<Preference>(KEY_CRAWL_STATUS)?.summary = it.state.toString()
+                        }
+                    })
         }
 
         override fun onPause() {
@@ -78,9 +91,14 @@ class WebPageAlertActivity : AppCompatActivity() {
                     frequencyChanged = true
                 }
                 KEY_LAST_MODIFIED, KEY_LAST_CRAWLED -> {
+                    val value = sharedPreferences!!.getLong(key, LAST_MODIFIED_UNAVAILABLE)
                     findPreference<Preference>(key)?.summary =
-                            DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-                                    .format(Date(sharedPreferences!!.getLong(key, 0L)))
+                        when (value) {
+                            LAST_MODIFIED_UNAVAILABLE -> getString(R.string.status_unavailable)
+                            LAST_MODIFIED_ERROR -> getString(R.string.status_error)
+                            LAST_MODIFIED_INVALID -> getString(R.string.status_invalid)
+                            else -> DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(Date(value))
+                        }
                 }
             }
         }
