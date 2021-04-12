@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">WebPageAlert</string>
+    <string name="setting_url">URL to crawl</string>
+    <string name="setting_frequency">Crawl frequency (min)</string>
+    <string name="setting_now">Crawl now</string>
+</resources>
