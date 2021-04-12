@@ -14,7 +14,7 @@
         app:seekBarIncrement="60"
         app:updatesContinuously="true"
         app:showSeekBarValue="true"
-        app:min="60"
+        app:min="15"
         android:max="1440"
         android:defaultValue="60"
         android:title="@string/setting_frequency"/>

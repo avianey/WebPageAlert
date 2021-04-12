@@ -4,11 +4,9 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
-import com.android.volley.Request
 import java.text.DateFormat
 import java.util.*
 
@@ -23,9 +21,9 @@ class WebPageAlertActivity : AppCompatActivity() {
         const val KEY_LAST_MODIFIED = "modified"
         const val KEY_LAST_CRAWLED = "crawled"
 
-        private const val CRAWL_FREQUENCY_MIN = 60
-        private const val CRAWL_FREQUENCY_MAX = 60 * 24 // 1 day
-        private const val CRAWL_FREQUENCY_DEFAULT = CRAWL_FREQUENCY_MIN
+        const val CRAWL_FREQUENCY_MIN = 15
+        const val CRAWL_FREQUENCY_MAX = 60 * 24 // 1 day
+        const val CRAWL_FREQUENCY_DEFAULT = 60
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,21 +43,9 @@ class WebPageAlertActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             addPreferencesFromResource(R.xml.settings)
             findPreference<Preference>(KEY_NOW)?.setOnPreferenceClickListener {
-                crawlURL()
+                scheduleCrawl()
                 true
             }
-        }
-
-        private fun crawlURL() {
-            val url = getDefaultSharedPreferences(requireContext()).getString(KEY_URL, "")!!
-            val now = Date().time
-            val stringRequest = WebPageAlertRequest(Request.Method.GET, url, { },  { }) { lastModified ->
-                getDefaultSharedPreferences(requireContext()).edit {
-                    putLong(KEY_LAST_MODIFIED, lastModified)
-                    putLong(KEY_LAST_CRAWLED, now)
-                }
-            }
-            (activity?.application as WebPageAlertApplication?)?.requestQueue?.add(stringRequest)
         }
 
         override fun onResume() {
@@ -67,6 +53,8 @@ class WebPageAlertActivity : AppCompatActivity() {
             getDefaultSharedPreferences(requireContext()).let {
                 it.registerOnSharedPreferenceChangeListener(this)
                 onSharedPreferenceChanged(it, KEY_URL)
+                onSharedPreferenceChanged(it, KEY_LAST_MODIFIED)
+                onSharedPreferenceChanged(it, KEY_LAST_CRAWLED)
             }
         }
 
@@ -74,9 +62,7 @@ class WebPageAlertActivity : AppCompatActivity() {
             super.onPause()
             getDefaultSharedPreferences(requireContext())
                     .unregisterOnSharedPreferenceChangeListener(this)
-            if (frequencyChanged) {
-                // TODO reschedule
-            }
+            if (frequencyChanged) { scheduleCrawl() }
         }
 
         override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -86,7 +72,7 @@ class WebPageAlertActivity : AppCompatActivity() {
                     val url = sharedPreferences!!.getString(key, "")
                     findPreference<Preference>(key)?.summary = url
                     Log.d(APP_TAG, "URL changed to $url")
-                    crawlURL()
+                    scheduleCrawl()
                 }
                 KEY_FREQUENCY -> {
                     frequencyChanged = true
@@ -96,6 +82,15 @@ class WebPageAlertActivity : AppCompatActivity() {
                             DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
                                     .format(Date(sharedPreferences!!.getLong(key, 0L)))
                 }
+            }
+        }
+
+        private fun scheduleCrawl() {
+            val url = getDefaultSharedPreferences(requireContext()).getString(KEY_URL, "")
+            if (url.isNullOrBlank()) {
+                WebPageAlertWorker.cancel(requireContext())
+            } else {
+                WebPageAlertWorker.schedule(requireContext())
             }
         }
 
